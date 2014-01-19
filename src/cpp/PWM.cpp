@@ -6,21 +6,21 @@
  */
 
 extern "C" {
-#include <bcm2835.h>
+#include "./bcm2835.h"
 }
 
+#include <iostream>
 #include "PWM.h"
 #include "Exceptions.h"
 
+using namespace std;
 
-PWM::PWM(int pin) {
-  maxDownTime = 35;
-  downTime = maxDownTime;
-  dutyTime = 10;
-  minDownTime = 0;
-  upTime = 1;
-  shouldStop = false;
 
+PWM::PWM(
+  unsigned int pin,
+  unsigned int dutyCycle,
+  unsigned int interval
+) {
   switch(pin){
     case 3: rpi_pin = RPI_V2_GPIO_P1_03;break;
     case 5: rpi_pin = RPI_V2_GPIO_P1_05;break;
@@ -44,10 +44,37 @@ PWM::PWM(int pin) {
   }
 
   bcm2835_gpio_fsel(rpi_pin, BCM2835_GPIO_FSEL_OUTP);
+
+  setDutyCycle(dutyCycle);
+  setInterval(interval);
 }
 
+unsigned int PWM::getDutyCycle(){
+  return dutyCycle;
+}
+
+unsigned int PWM::getInterval(){
+  return interval;
+}
+
+void PWM::setDutyCycle(unsigned int dutyCycle){
+  if(dutyCycle > 100){
+    dutyCycle = 100;
+  }
+
+  this->dutyCycle = dutyCycle;
+}
+
+void PWM::setInterval(unsigned int interval){
+  if(interval == 0){
+    throw Exceptions::BAD_PWM_INTERVAL;
+  }
+  this->interval = interval;
+}
 
 void PWM::start(){
+  shouldStop = false;
+  cout << "starting" << '\n';
   std::thread d(&PWM::run, this);    
   d.detach();
   t = &d;
@@ -71,17 +98,24 @@ void PWM::run() {
       break;
     }
     mtx.lock();
+
+    int onTime = interval * dutyCycle / 100;
+    int offTime = interval - onTime;
+
+    cout << "onTime: " << onTime << '\n';
+    cout << "offTime: " << offTime << '\n';
+    
     // Turn it on
     bcm2835_gpio_write(rpi_pin, 1);
 
     // wait a bit
-    bcm2835_delay(upTime);
+    bcm2835_delay(onTime);
 
     // turn it off
     bcm2835_gpio_write(rpi_pin, 0);
 
     // wait a bit
-    bcm2835_delay(downTime);
+    bcm2835_delay(offTime);
     mtx.unlock();
   }
 }

@@ -5,6 +5,7 @@
  * Created on January 9, 2014, 11:43 PM
  */
 
+#include <iostream>
 #include <stdio.h>
 #include <signal.h>
 #include "PWM.h"
@@ -40,33 +41,33 @@ int main(int argc, char** argv) {
   if (!bcm2835_init())return 1;
 
 
-  int direction = 0;
+  int direction = 1;
 
-  PWM testThread(11);
+  PWM pwm(11, 0, 35);
 
-  testThread.start();
+  pwm.start();
 
   while (1) {
+    cout << "direction: " << direction << '\n';
+    cout << "dutyCycle: " << pwm.getDutyCycle() << '\n';
+    cout << "interval: " << pwm.getInterval() << '\n';
+
     if (direction == 1) {
-      testThread.downTime = testThread.downTime + 1;
+      pwm.setDutyCycle(pwm.getDutyCycle() + 10);
     } else {
-      testThread.downTime = testThread.downTime - 1;
+      pwm.setDutyCycle(pwm.getDutyCycle() - 10);
     }
 
-    if (testThread.downTime == testThread.maxDownTime) {
+    if (pwm.getDutyCycle() == 100) {
       direction = 0;
-      testThread.pause();
-      bcm2835_delay(testThread.dutyTime + 1000);
-      testThread.resume();
-    } else if (testThread.downTime == testThread.minDownTime) {
+    } else if (pwm.getDutyCycle() == 0) {
       direction = 1;
-      bcm2835_delay(testThread.dutyTime + 1000);
-    } else {
-      bcm2835_delay(testThread.dutyTime);
     }
+
+    bcm2835_delay(1000);
   }
 
-  testThread.stop();
+  pwm.stop();
 
   bcm2835_close();
   return 0;

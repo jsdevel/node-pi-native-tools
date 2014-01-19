@@ -8,6 +8,7 @@
 #ifndef EXCEPTIONS_H
 #define	EXCEPTIONS_H
 enum Exceptions {
-  UNKNOWN_GPIO_PORT
+  UNKNOWN_GPIO_PORT,
+  BAD_PWM_INTERVAL
 };
 #endif	/* EXCEPTIONS_H */

@@ -1,128 +1,75 @@
-#
-#  There exist several targets which are by default empty and which can be 
-#  used for execution of your targets. These targets are usually executed 
-#  before and after some main targets. They are: 
-#
-#     .build-pre:              called before 'build' target
-#     .build-post:             called after 'build' target
-#     .clean-pre:              called before 'clean' target
-#     .clean-post:             called after 'clean' target
-#     .clobber-pre:            called before 'clobber' target
-#     .clobber-post:           called after 'clobber' target
-#     .all-pre:                called before 'all' target
-#     .all-post:               called after 'all' target
-#     .help-pre:               called before 'help' target
-#     .help-post:              called after 'help' target
-#
-#  Targets beginning with '.' are not intended to be called on their own.
-#
-#  Main targets can be executed directly, and they are:
-#  
-#     build                    build a specific configuration
-#     clean                    remove built files from a configuration
-#     clobber                  remove all built files
-#     all                      build all configurations
-#     help                     print help mesage
-#  
-#  Targets .build-impl, .clean-impl, .clobber-impl, .all-impl, and
-#  .help-impl are implemented in nbproject/makefile-impl.mk.
-#
-#  Available make variables:
-#
-#     CND_BASEDIR                base directory for relative paths
-#     CND_DISTDIR                default top distribution directory (build artifacts)
-#     CND_BUILDDIR               default top build directory (object files, ...)
-#     CONF                       name of current configuration
-#     CND_PLATFORM_${CONF}       platform name (current configuration)
-#     CND_ARTIFACT_DIR_${CONF}   directory of build artifact (current configuration)
-#     CND_ARTIFACT_NAME_${CONF}  name of build artifact (current configuration)
-#     CND_ARTIFACT_PATH_${CONF}  path to build artifact (current configuration)
-#     CND_PACKAGE_DIR_${CONF}    directory of package (current configuration)
-#     CND_PACKAGE_NAME_${CONF}   name of package (current configuration)
-#     CND_PACKAGE_PATH_${CONF}   path to package (current configuration)
-#
-# NOCDDL
+CXXAPP := node-pi-native-tools
+EXE := $(CXXAPP).exe
+SRC_FILES = $(shell find src -type f -name '*.cpp')
+SRC_OBJECT_FILES = $(SRC_FILES:%.cpp=%.o)
+TEST_SRC_FILES = $(shell find src -type f -name '*.cpp' \( ! -name 'main.cpp' \))
+TEST_FIXTURES = $(shell find test/cpp/fixtures -type f)
+TEST_HELPERS = $(shell find test/cpp/helpers -type f -name '*.cpp')
+TEST_FILES = $(shell find test/cpp -type f -name *.test.cpp)
+TEST_EXECUTABLES=$(TEST_FILES:%.test.cpp=%.test.exe)
 
+CXXFLAGS:= -std=c++0x -pthread
 
-# Environment 
-MKDIR=mkdir
-CP=cp
-CCADMIN=CCadmin
+#General
+all: test-all
+	@echo
 
+clean:
+	@echo Cleaning up
+	@-rm $(TEST_EXECUTABLES) 2> /dev/null
+	@-rm $(EXE) 2> /dev/null
+	@-rm $(SRC_OBJECT_FILES) 2> /dev/null
 
-# build
-build: .build-post
+clean-remote:
+	@ssh pi 'cd $(CXXAPP);make clean;'
 
-.build-pre:
-# Add your pre 'build' code here...
+%.cpp:
 
-.build-post: .build-impl
-# Add your post 'build' code here...
+sync-remote:
+	@-ssh pi 'mkdir $(CXXAPP)' 2> /dev/null
+	rsync -a --exclude '*.exe' --exclude '*.swp' --exclude '*.o' -e ssh . pi:~/$(CXXAPP) 
 
+#Building
+build: $(EXE)
 
-# clean
-clean: .clean-post
+build-remote: sync-remote
+	ssh pi 'cd $(CXXAPP);make build'
 
-.clean-pre:
-# Add your pre 'clean' code here...
+$(EXE): $(SRC_OBJECT_FILES)
+	$(CXX) $(CXXFLAGS) -o $(EXE) $(SRC_OBJECT_FILES) -lbcm2835 
 
-.clean-post: .clean-impl
-# Add your post 'clean' code here...
+%.o: %.cpp
+	@echo $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+#running
+run-remote: build-remote
+	ssh -t pi 'cd $(CXXAPP);./$(EXE)'
 
-# clobber
-clobber: .clobber-post
+#Testing
+test-all: run-cpp-tests
 
-.clobber-pre:
-# Add your pre 'clobber' code here...
+test-remote: sync-remote
+	ssh pi 'cd $(CXXAPP);make test-all'
 
-.clobber-post: .clobber-impl
-# Add your post 'clobber' code here...
+run-cpp-tests: $(TEST_EXECUTABLES)
+	@echo
+	@echo ========= TEST SUITES ========
+	@-for file in $(TEST_EXECUTABLES);do \
+	echo "";\
+	echo "======== $${file}";\
+	./$${file} || { echo 'FAILED'; exit 1; };\
+	echo "";\
+	echo "";\
+	done
+	@echo ========= FINISHED ========
+	@echo
 
+%.test.exe: %.test.cpp $(TEST_SRC_FILES) $(TEST_FIXTURES) $(TEST_HELPERS)
+	@echo ==== Compiling $@
+	@echo == TEST_SRC_FILES $(TEST_SRC_FILES)
+	@echo == TEST_FIXTURES $(TEST_FIXTURES)
+	@echo == TEST_HELPERS $(TEST_HELPERS)
+	@echo
+	@$(CXX) $(CXXFLAGS) $< $(TEST_FIXTURES) $(TEST_HELPERS) $(TEST_SRC_FILES) -o $@
 
-# all
-all: .all-post
-
-.all-pre:
-# Add your pre 'all' code here...
-
-.all-post: .all-impl
-# Add your post 'all' code here...
-
-
-# build tests
-build-tests: .build-tests-post
-
-.build-tests-pre:
-# Add your pre 'build-tests' code here...
-
-.build-tests-post: .build-tests-impl
-# Add your post 'build-tests' code here...
-
-
-# run tests
-test: .test-post
-
-.test-pre: build-tests
-# Add your pre 'test' code here...
-
-.test-post: .test-impl
-# Add your post 'test' code here...
-
-
-# help
-help: .help-post
-
-.help-pre:
-# Add your pre 'help' code here...
-
-.help-post: .help-impl
-# Add your post 'help' code here...
-
-
-
-# include project implementation makefile
-include nbproject/Makefile-impl.mk
-
-# include project make variables
-include nbproject/Makefile-variables.mk
