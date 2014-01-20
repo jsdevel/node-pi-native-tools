@@ -1,12 +1,13 @@
+#!/bin/make -f
 CXXAPP := node-pi-native-tools
 EXE := $(CXXAPP).exe
-SRC_FILES = $(shell find src -type f -name '*.cpp')
-SRC_OBJECT_FILES = $(SRC_FILES:%.cpp=%.o)
-TEST_SRC_FILES = $(shell find src -type f -name '*.cpp' \( ! -name 'main.cpp' \))
-TEST_FIXTURES = $(shell find test/cpp/fixtures -type f)
-TEST_HELPERS = $(shell find test/cpp/helpers -type f -name '*.cpp')
-TEST_FILES = $(shell find test/cpp -type f -name *.test.cpp)
-TEST_EXECUTABLES=$(TEST_FILES:%.test.cpp=%.test.exe)
+SRC_FILES = $(shell find src -type f -name '*.cc')
+SRC_OBJECT_FILES = $(SRC_FILES:%.cc=%.o)
+TEST_SRC_FILES = $(shell find src -type f -name '*.cc' \( ! -name 'main.cc' \))
+TEST_FIXTURES = $(shell find test/cc/fixtures -type f)
+TEST_HELPERS = $(shell find test/cc/helpers -type f -name '*.cc')
+TEST_FILES = $(shell find test/cc -type f -name *.test.cc)
+TEST_EXECUTABLES=$(TEST_FILES:%.test.cc=%.test.exe)
 
 CXXFLAGS:= -std=c++0x -pthread
 
@@ -23,7 +24,7 @@ clean:
 clean-remote:
 	@ssh pi 'cd $(CXXAPP);make clean;'
 
-%.cpp:
+%.cc:
 
 sync-remote:
 	@-ssh pi 'mkdir $(CXXAPP)' 2> /dev/null
@@ -38,7 +39,7 @@ build-remote: sync-remote
 $(EXE): $(SRC_OBJECT_FILES)
 	$(CXX) $(CXXFLAGS) -o $(EXE) $(SRC_OBJECT_FILES) -lbcm2835 
 
-%.o: %.cpp
+%.o: %.cc
 	@echo $@
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -47,12 +48,12 @@ run-remote: build-remote
 	ssh -t pi 'cd $(CXXAPP);./$(EXE)'
 
 #Testing
-test-all: run-cpp-tests
+test-all: run-cc-tests
 
 test-remote: sync-remote
 	ssh pi 'cd $(CXXAPP);make test-all'
 
-run-cpp-tests: $(TEST_EXECUTABLES)
+run-cc-tests: $(TEST_EXECUTABLES)
 	@echo
 	@echo ========= TEST SUITES ========
 	@-for file in $(TEST_EXECUTABLES);do \
@@ -65,7 +66,7 @@ run-cpp-tests: $(TEST_EXECUTABLES)
 	@echo ========= FINISHED ========
 	@echo
 
-%.test.exe: %.test.cpp $(TEST_SRC_FILES) $(TEST_FIXTURES) $(TEST_HELPERS)
+%.test.exe: %.test.cc $(TEST_SRC_FILES) $(TEST_FIXTURES) $(TEST_HELPERS)
 	@echo ==== Compiling $@
 	@echo == TEST_SRC_FILES $(TEST_SRC_FILES)
 	@echo == TEST_FIXTURES $(TEST_FIXTURES)

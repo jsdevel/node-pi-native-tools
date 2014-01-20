@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <iostream>
 #include "helpers/assert.h"
-#include "../../src/cpp/PWM.h"
+#include "../../src/cc/PWM.h"
 
 using namespace std;
 
