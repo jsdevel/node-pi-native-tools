@@ -74,7 +74,6 @@ void PWM::setInterval(unsigned int interval){
 
 void PWM::start(){
   shouldStop = false;
-  cout << "starting" << '\n';
   std::thread d(&PWM::run, this);    
   d.detach();
   t = &d;
@@ -102,9 +101,6 @@ void PWM::run() {
     int onTime = interval * dutyCycle / 100;
     int offTime = interval - onTime;
 
-    cout << "onTime: " << onTime << '\n';
-    cout << "offTime: " << offTime << '\n';
-    
     // Turn it on
     bcm2835_gpio_write(rpi_pin, 1);
 

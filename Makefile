@@ -57,11 +57,7 @@ run-cc-tests: $(TEST_EXECUTABLES)
 	@echo
 	@echo ========= TEST SUITES ========
 	@-for file in $(TEST_EXECUTABLES);do \
-	echo "";\
-	echo "======== $${file}";\
-	./$${file} || { echo 'FAILED'; exit 1; };\
-	echo "";\
-	echo "";\
+	./$${file}; \
 	done
 	@echo ========= FINISHED ========
 	@echo

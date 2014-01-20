@@ -48,14 +48,10 @@ int main(int argc, char** argv) {
   pwm.start();
 
   while (1) {
-    cout << "direction: " << direction << '\n';
-    cout << "dutyCycle: " << pwm.getDutyCycle() << '\n';
-    cout << "interval: " << pwm.getInterval() << '\n';
-
     if (direction == 1) {
-      pwm.setDutyCycle(pwm.getDutyCycle() + 10);
+      pwm.setDutyCycle(pwm.getDutyCycle() + 1);
     } else {
-      pwm.setDutyCycle(pwm.getDutyCycle() - 10);
+      pwm.setDutyCycle(pwm.getDutyCycle() - 1);
     }
 
     if (pwm.getDutyCycle() == 100) {
@@ -64,7 +60,7 @@ int main(int argc, char** argv) {
       direction = 1;
     }
 
-    bcm2835_delay(1000);
+    bcm2835_delay(10);
   }
 
   pwm.stop();
