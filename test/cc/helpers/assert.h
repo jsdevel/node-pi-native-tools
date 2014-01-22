@@ -16,6 +16,7 @@ limitations under the License.
 #include <cstdarg>
 #include <iostream>
 #include <ctime>
+#define IS_TESTING 1
 #define assert(cond) \
   if(!(cond)){ \
     printf("    |__ ASSERTION FAILED: %s", #cond); \

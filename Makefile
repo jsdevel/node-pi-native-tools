@@ -12,7 +12,7 @@ TEST_EXECUTABLES=$(TEST_FILES:%.test.cc=%.test.exe)
 CXXFLAGS:= -std=c++0x -pthread
 
 #General
-all: test-all
+all: test
 	@echo
 
 clean:
@@ -25,6 +25,8 @@ clean-remote:
 	@ssh pi 'cd $(CXXAPP);make clean;'
 
 %.cc:
+
+%.h:
 
 sync-remote:
 	@-ssh pi 'mkdir $(CXXAPP)' 2> /dev/null
@@ -41,17 +43,17 @@ $(EXE): $(SRC_OBJECT_FILES)
 
 %.o: %.cc
 	@echo $@
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c -o $< $@
 
 #running
 run-remote: build-remote
 	ssh -t pi 'cd $(CXXAPP);./$(EXE)'
 
 #Testing
-test-all: run-cc-tests
+test: run-cc-tests
 
 test-remote: sync-remote
-	ssh pi 'cd $(CXXAPP);make test-all'
+	ssh pi 'cd $(CXXAPP);make test'
 
 run-cc-tests: $(TEST_EXECUTABLES)
 	@echo
@@ -62,11 +64,18 @@ run-cc-tests: $(TEST_EXECUTABLES)
 	@echo ========= FINISHED ========
 	@echo
 
-%.test.exe: %.test.cc $(TEST_SRC_FILES) $(TEST_FIXTURES) $(TEST_HELPERS)
-	@echo ==== Compiling $@
-	@echo == TEST_SRC_FILES $(TEST_SRC_FILES)
-	@echo == TEST_FIXTURES $(TEST_FIXTURES)
-	@echo == TEST_HELPERS $(TEST_HELPERS)
-	@echo
-	@$(CXX) $(CXXFLAGS) $< $(TEST_FIXTURES) $(TEST_HELPERS) $(TEST_SRC_FILES) -o $@
+%.test.exe: %.test.cc $(TEST_FIXTURES) $(TEST_HELPERS) $(TEST_SRC_FILES)
+#@echo ==== Compiling $@
+#@echo == TEST_SRC_FILES $(TEST_SRC_FILES)
+#@echo == TEST_FIXTURES $(TEST_FIXTURES)
+#@echo == TEST_HELPERS $(TEST_HELPERS)
+#@echo == basename $(shell basename $@ '.test.exe')
+#@echo == ? $(shell echo "$@" | sed 's|test/|src/|' | sed 's|.test.exe|.cc|')
+#@echo == $$@ $@
+#@echo
+	@$(CXX) $(CXXFLAGS) -o $@ \
+		$< \
+		$(shell find test/cc/fixtures -type f -name '*.fixture.cc' \( ! -name '$(shell basename $@ '.test.exe').fixture.cc' \)) \
+		$(TEST_HELPERS) \
+		$(shell echo $@ | sed 's|test/|src/|' | sed 's|.test.exe|.cc|')
 

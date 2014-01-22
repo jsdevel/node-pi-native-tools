@@ -9,20 +9,20 @@
 
 #include <thread>
 #include <mutex>
+#include "GPIOOutput.h"
 
 class PWM {
 protected:
   std::mutex mtx;
   bool shouldStop;
   std::thread * t;
-  int rpi_pin;
+  GPIOOutput * gpio;
   volatile unsigned int dutyCycle;
   volatile unsigned int interval;
 
 public:
-
   PWM(
-    unsigned int pin,
+    GPIOOutput * gpio,
     unsigned int dutyCycle,
     unsigned int interval
   );
@@ -34,6 +34,6 @@ public:
   void pause();
   void resume();
   void run();
-  void start();
+  int start();
   void stop();
 };

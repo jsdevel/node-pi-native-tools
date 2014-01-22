@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <signal.h>
+#include "GPIOOutput.h"
 #include "PWM.h"
 
 using namespace std;
@@ -43,7 +44,8 @@ int main(int argc, char** argv) {
 
   int direction = 1;
 
-  PWM pwm(11, 0, 35);
+  GPIOOutput gpio(12);
+  PWM pwm(gpio, 0, 15);
 
   pwm.start();
 
