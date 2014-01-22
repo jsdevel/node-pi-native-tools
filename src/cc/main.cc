@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 
   int direction = 1;
 
-  GPIOOutput gpio(12);
+  GPIOOutput * gpio = new GPIOOutput(12);
   PWM pwm(gpio, 0, 15);
 
   pwm.start();

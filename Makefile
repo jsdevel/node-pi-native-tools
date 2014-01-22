@@ -9,19 +9,20 @@ TEST_HELPERS = $(shell find test/cc/helpers -type f -name '*.cc')
 TEST_FILES = $(shell find test/cc -type f -name *.test.cc)
 TEST_EXECUTABLES=$(TEST_FILES:%.test.cc=%.test.exe)
 
-CXXFLAGS:= -std=c++0x -pthread
+CXXFLAGS:= -std=c++0x
+CXXLIBS := -pthread
 
 #General
 all: test
-	@echo
 
 clean:
-	@echo Cleaning up
+	@echo [$@]
 	@-rm $(TEST_EXECUTABLES) 2> /dev/null
 	@-rm $(EXE) 2> /dev/null
 	@-rm $(SRC_OBJECT_FILES) 2> /dev/null
 
 clean-remote:
+	@echo [$@]
 	@ssh pi 'cd $(CXXAPP);make clean;'
 
 %.cc:
@@ -29,34 +30,38 @@ clean-remote:
 %.h:
 
 sync-remote:
+	@echo [$@]
 	@-ssh pi 'mkdir $(CXXAPP)' 2> /dev/null
-	rsync -a --exclude '*.exe' --exclude '*.swp' --exclude '*.o' -e ssh . pi:~/$(CXXAPP) 
+	@rsync -a --exclude '*.exe' --exclude '*.swp' --exclude '*.o' -e ssh . pi:~/$(CXXAPP) 
 
 #Building
 build: $(EXE)
 
 build-remote: sync-remote
-	ssh pi 'cd $(CXXAPP);make build'
+	@echo [$@]
+	@ssh pi 'cd $(CXXAPP);make build'
 
 $(EXE): $(SRC_OBJECT_FILES)
-	$(CXX) $(CXXFLAGS) -o $(EXE) $(SRC_OBJECT_FILES) -lbcm2835 
+	@echo [$@]
+	@$(CXX) $(CXXFLAGS) -o $(EXE) $(SRC_OBJECT_FILES) -lbcm2835 $(CXXLIBS)
 
 %.o: %.cc
-	@echo $@
-	$(CXX) $(CXXFLAGS) -c -o $< $@
+	@$(CXX) $(CXXFLAGS) -c -o $@ $< $(CXXLIBS)
 
 #running
 run-remote: build-remote
-	ssh -t pi 'cd $(CXXAPP);./$(EXE)'
+	@echo [$@]
+	@ssh -t pi 'cd $(CXXAPP);./$(EXE)'
 
 #Testing
 test: run-cc-tests
 
 test-remote: sync-remote
-	ssh pi 'cd $(CXXAPP);make test'
+	@echo [$@]
+	@ssh pi 'cd $(CXXAPP);make test'
 
 run-cc-tests: $(TEST_EXECUTABLES)
-	@echo
+	@echo [$@]
 	@echo ========= TEST SUITES ========
 	@-for file in $(TEST_EXECUTABLES);do \
 	./$${file}; \
@@ -77,5 +82,6 @@ run-cc-tests: $(TEST_EXECUTABLES)
 		$< \
 		$(shell find test/cc/fixtures -type f -name '*.fixture.cc' \( ! -name '$(shell basename $@ '.test.exe').fixture.cc' \)) \
 		$(TEST_HELPERS) \
-		$(shell echo $@ | sed 's|test/|src/|' | sed 's|.test.exe|.cc|')
+		$(shell echo $@ | sed 's|test/|src/|' | sed 's|.test.exe|.cc|') \
+		$(CXXLIBS)
 
