@@ -55,6 +55,7 @@ run-remote: build-remote
 
 #Testing
 test: run-cc-tests
+	@echo [$@]
 
 test-remote: sync-remote
 	@echo [$@]
@@ -70,6 +71,7 @@ run-cc-tests: $(TEST_EXECUTABLES)
 	@echo
 
 %.test.exe: %.test.cc $(TEST_FIXTURES) $(TEST_HELPERS) $(TEST_SRC_FILES)
+	@echo [$@]
 #@echo ==== Compiling $@
 #@echo == TEST_SRC_FILES $(TEST_SRC_FILES)
 #@echo == TEST_FIXTURES $(TEST_FIXTURES)
@@ -79,9 +81,9 @@ run-cc-tests: $(TEST_EXECUTABLES)
 #@echo == $$@ $@
 #@echo
 	@$(CXX) $(CXXFLAGS) -o $@ \
-		$< \
-		$(shell find test/cc/fixtures -type f -name '*.fixture.cc' \( ! -name '$(shell basename $@ '.test.exe').fixture.cc' \)) \
 		$(TEST_HELPERS) \
+		$(shell find test/cc/fixtures -type f -name '*.fixture.cc' \( ! -name '$(shell basename $@ '.test.exe').fixture.cc' \)) \
+		$< \
 		$(shell echo $@ | sed 's|test/|src/|' | sed 's|.test.exe|.cc|') \
 		$(CXXLIBS)
 

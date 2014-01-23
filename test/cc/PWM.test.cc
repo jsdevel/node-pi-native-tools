@@ -3,23 +3,22 @@
 #include <unistd.h>
 #include "../../src/cc/GPIOOutput.h"
 #include "../../src/cc/PWM.h"
-#include "helpers/test-ns.h"
+#include "helpers/TestVars.h"
 
 using namespace std;
+
+extern TestVars TEST_VARS;
 
 #define USE_BEFORE 1
 #define USE_AFTER 1
 #include "helpers/assert.h"
 namespace test {
-  int __output_erasures;
-  int __output_writes;
 
   GPIOOutput * gpio;
   PWM * pwm;
 
   void before(){
-    __output_erasures = 0;
-    __output_writes = 0;
+    TEST_VARS.reset();
     gpio = new GPIOOutput(5);
     pwm = new PWM(gpio, 90, 4000);
   }
@@ -85,11 +84,11 @@ namespace test {
   void a_running_pwm_writes_to_the_pin(){
     pwm->start();
     sleep(2);
-    assert(test::__output_writes > 0);
+    assert(TEST_VARS.output_write > 0);
   }
  
   void no_write_to_pin_when_pwm_not_running(){
-    assert(test::__output_writes == 0);
+    assert(TEST_VARS.currentValue == 0);
   }
 }
 

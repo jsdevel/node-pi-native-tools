@@ -3,9 +3,6 @@
 #include "GPIO.h"
 
 class GPIOOutput : public GPIO {
-protected:
-  volatile unsigned int status;
-
 public:
   GPIOOutput(int pin);
   void erase();

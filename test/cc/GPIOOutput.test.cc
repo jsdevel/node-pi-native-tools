@@ -1,19 +1,22 @@
 #include <cstdio>
 #include <iostream>
 #include <unistd.h>
+#include "../../src/cc/bcm2835.h"
 #include "../../src/cc/GPIOOutput.h"
+#include "helpers/TestVars.h"
 
 using namespace std;
+
+extern TestVars TEST_VARS;
 
 #define USE_BEFORE 1
 #define USE_AFTER 1
 #include "helpers/assert.h"
 namespace test {
-  int __output_writes;
   GPIOOutput * gpio;
 
   void before(){
-    __output_writes = 0;
+    TEST_VARS.reset();
     gpio = new GPIOOutput(5);
   }
 
@@ -42,20 +45,31 @@ namespace test {
 
   void write_calls_bcm_write(){
     gpio->write();
-    assert(test::__output_writes == 1);
+    assert(TEST_VARS.output_write == 1);
     gpio->write();
-    assert(test::__output_writes == 2);
+    assert(TEST_VARS.output_write == 2);
+  }
+
+  void write_uses_given_pin(){
+    gpio->write();
+    //note that the GPIO class should convert this
+    assert(TEST_VARS.currentPin == 5);
   }
 
   void erase_calls_bcm_write(){
     gpio->erase();
-    assert(test::__output_writes == 0);
+    assert(TEST_VARS.currentValue == 0);
     gpio->write();
-    assert(test::__output_writes == 1);
+    assert(TEST_VARS.currentValue == 1);
     gpio->erase();
-    assert(test::__output_writes == 1);
+    assert(TEST_VARS.currentValue == 0);
   }
 
+  void erase_uses_given_pin(){
+    gpio->erase();
+    //note that the GPIO class should convert this
+    assert(TEST_VARS.currentPin == 5);
+  }
 }
 
 int main(){
@@ -63,6 +77,8 @@ int main(){
   /*TEST(valid_pins_for_constructor_throw_no_error);
   TEST(invalid_pins_for_constructor_throw_error);*/
   TEST(write_calls_bcm_write);
+  TEST(write_uses_given_pin);
   TEST(erase_calls_bcm_write);
+  TEST(erase_uses_given_pin);
   END();
 }

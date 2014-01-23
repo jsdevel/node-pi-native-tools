@@ -2,7 +2,6 @@
 #include <iostream>
 #include <unistd.h>
 #include "../../src/cc/GPIO.h"
-#include "helpers/test-ns.h"
 
 using namespace std;
 
@@ -10,8 +9,6 @@ using namespace std;
 #define USE_AFTER 1
 #include "helpers/assert.h"
 namespace test {
-  int __output_erasures;
-  int __output_writes;
 
   GPIO * gpio;
 

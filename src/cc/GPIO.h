@@ -4,7 +4,7 @@
 class GPIO {
 protected:
   int pin;
-  RPiGPIOPin rpi_pin;
+  int rpi_pin;
 
 public:
   const int function;
